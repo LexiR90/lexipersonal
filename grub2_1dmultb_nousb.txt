@@ -1,0 +1,547 @@
+﻿################################################################
+##  Grub 2 Setup Guide                                        ##
+##  Single Drive Multiboot, No USB, DVD, or Netboot           ##
+##  By Lexi Rathbun                                           ##
+##  Version 0.0.5-1                                           ##
+##  09/29/2024                                                ##
+################################################################
+##                                                            ##
+##  Table of Contents                                         ##
+##                                                            ##
+##  1. Introduction                                           ##
+##  2. Disclaimer                                             ##
+##  3. Supported Systems                                      ##
+##  4. Overview                                               ##
+##  5. System Preparation (NULL)                              ##
+##  6. ISO Preparation (NULL)                                 ##
+##  7. Grub 2 Installation and Configuration (NULL)           ##
+##  8. Post ISO-Boot Generalized Next Steps (NULL)            ##
+##  9. Example 50_isoboot Grub 2 Config File (NULL)           ##
+##  10. FAQ (NULL)                                            ##
+##  11. Reference (NULL)                                      ##
+##  12. Credits and Thanks                                    ##
+##  13. Contact (WIP)                                         ##
+##                                                            ##
+################################################################
+##  
+##  1. Introduction
+##  
+##  It is the nature of humans to be lazy. This project stems
+##  From that nature. It is my hope that the effort put forth
+##  To produce this document will assist other humans in being
+##  Lazy, and allow computers to do what they’re good at;
+##  Performing repeatable, formulaic tasks far more efficiently
+##  Than any of us humans are capable of.
+##  
+##  Linux, in a general sense, is largely regarded as a
+##  Professional computer operating system for use by
+##  Humans who have grown tired of the walls and Limitations
+##  Found in Windows operating systems. Linux is versatile,
+##  And perhaps more importantly, open source. In recent
+##  Years, Linux has expanded compatibility for programs
+##  Designed for use in other operating systems to a point
+##  That it’s greatest drawback has been mitigated sufficiently
+##  For adoption as a general use, consumer grade, free,
+##  High quality, highly supported operating system with greater
+##  Functionality than any other operating system available,
+##  Especially when one familiarizes themselves with it’s use.
+##  
+##  However, installing Linux, especially alongside Windows in a
+##  “Dualboot” configuration that provides peace of mind to new
+##  Users who remain dubious of the level of compatibility and
+##  Functionality remains intimidating and rather complicated.
+##  
+##  Having faced this issue myself, and having personally
+##  Invested a great deal of time educating myself on the
+##  Available tools used to accomplish this goal, I have
+##  Discovered inefficiencies in what is considered the standard
+##  Process for accomplishing the task. Indeed, it is my belief
+##  That the entire process may one day be entirely automated
+##  Through the use of a yet-to-be-developed program that
+##  Will include a friendly, graphical user interface, opening
+##  The door to mass adoption of Linux as the premier operating
+##  System worldwide, thereby unseating the tech giants that are
+##  Microsoft, Apple, and Google, thereby moving the power of
+##  Computer technology into the hands of the general public
+##  And out of the hands of the elite ruling class worldwide.
+##  
+##  I realize the target this places on my back, and I believe
+##  That the resulting humanitarian benefit to society is of
+##  Greater value than my life. Should I fail to bring this
+##  Project to fruition, it is my desire that others would
+##  Take up the work and complete it for me, for the benefit
+##  And laziness of all humankind.
+##  
+##  All hail the imminent AGI Overlord!
+##  
+################################################################
+##  
+##  2. Disclaimer
+##  
+##  I have not been involved in the development of MS DOS,
+##  MS Windows, Linux (any of the distros), Mac OS, iOS,
+##  Android OS, ChromeOS, grub, grub 2, any other operating
+##  System, bootloader, or software mentioned in this document
+##  Or otherwise. I offer no warranty, guarantee, official
+##  Support service. Neither do I offer recompense for damages
+##  Caused by the use of the example code herein, the following
+##  Of any procedures or advice found herein, extrapolation of
+##  Theories or data presented herein, and I will not respond to
+##  Complaints or threats stemming from system failures
+##  That may occur during the use of this guide.
+##  
+##  USE AT YOUR OWN RISK
+##  
+################################################################
+##  
+##  3. Supported Systems
+##  
+##  As of version 0.1.0-0, this guide will only provide the
+##  Appropriate method for setting up a dualboot environment
+##  For Windows 11 and Linux Mint - Cinnamon on a Republic Of
+##  Gamers Strix G15CS model desktop computer system, as this is
+##  The only system I have had the opportunity to test the
+##  Process on. Additional system testing and feedback is
+##  Welcome and may be integrated into this guide with
+##  Appropriate credit where due as it becomes available.
+##  
+################################################################
+##  
+##  4. Overview
+##  
+##  For the ROG Strix G15CS system mentioned above;
+##  
+##  This is assuming that Windows has been updated
+##  From Windows 10 to Windows 11. IIRC, the machine was
+##  Produced with two drives, a 500 GB NVME SSD and a 1 TB SATA
+##  HDD. The SSD contained four (!) partitions, including an EFI
+##  Boot partition, some sort of tiny Windows system partition,
+##  The primary Windows OS partition, and a Windows system
+##  Restore partition. The HDD was empty, and IIRC it was
+##  Formatted with an NTFS Filesystem. I could be entirely
+##  Wrong about the the existence of the HDD, as I may have
+##  Added it after purchasing the system, but it doesn’t matter
+##  Much. The rule of human laziness described in the
+##  Introduction applies here; I do not care to look up
+##  The original system specs at this point.
+##  You won’t need the HDD for this process. I do suggest an
+##  Additional storage device, as splitting 500 GB between
+##  A Windows 11 installation and any other OS installation
+##  Will leave the user with a rather tiny amount of storage
+##  For applications. Adding another SSD for the Linux OS,
+##  Or two or four for various RAID implementations is
+##  Recommended, but goes beyond the scope of this guide;
+##  The purpose is to introduce new users to Linux.
+##  Once the user has familiarized themselves with the Linux
+##  Environment, it is entirely possible that they may choose
+##  To completely remove their Windows installation, in which
+##  Case the original storage devices will be sufficient.
+##  If the machine included an HDD, or one is added by the
+##  User, it should be kept in mind that an HDD will operate
+##  Much slower than the SSD, and will cause extended loading
+##  And caching times for any programs or games installed
+##  Upon it; therefore it is not recommended for use as part
+##  Of a RAID setup, and only as a backup and archive storage
+##  Device to supplement cloud backups and archives, in which
+##  Case it provides the distinct advantage of more reliable
+##  Data integrity than most SSD’s. An application such as
+##  Timeshift is recommended to make the best use of such
+##  Storage device. Personally, I used EaseUS Partition
+##  Manager from within Windows 11 to clone the original
+##  System Restore partition out of the SSD onto my HDD,
+##  Thereby allowing me to delete it from the SSD and
+##  Simplify the partition layout of the SSD when sharing it
+##  Between my original Windows installation and my first
+##  Linux Mint installation. This guide will describe the
+##  Process used.
+##  
+##  It may be necessary to defragment the NVME SSD in order
+##  For Windows to permit the resizing of the Windows partition.
+##  This is because hard drives do not always save data in a
+##  Sequential manner within their storage medium, and
+##  Individual files become split and spread across the drive
+##  Sectors, which will prevent resizing the partition to
+##  Make room for a new ext4 or BTRFS partition needed to
+##  Install Linux. This can all be skipped if an extra
+##  Drive is installed, formatted and partitioned.
+##  As of version 0.1.0-0 of this guide, only the process of
+##  Setting up dualboot on a single drive will be covered.
+##  
+##  WARNING
+##  
+##  SSD’s, including NVME SSD’s, tolerate a limited number of
+##  Write operations per bit and/or sector. Performing a
+##  Defragmentation operation upon an SSD is generally NOT
+##  Recommended. The primary reason to defragment a drive
+##  Is for the purpose of collecting related data “chunks”
+##  Close to each other on an HDD, such that it can read them
+##  Faster than if the read head had to seek across multiple
+##  Sectors spread across the medium. SSD’s do not benefit
+##  From defragmentation in this manner because they do not
+##  Involve a moving read head or a spinning disk medium.
+##  Data is read (nearly) instantaneously regardless of which
+##  Sectors it is stored within. Performing a defragmentation
+##  Operation upon an SSD uses up multiple write operation
+##  Cycles across a large quantity of the storage medium
+##  As data gets shuffled and collected towards the beginning
+##  Sectors of the drive. A single defragmentation operation
+##  Will not destroy the drive, and will not expend an
+##  “Excessive” quantity of write cycles, but in my own
+##  Experimentation it did consume ~5% of the life of my
+##  Original drive. For best results, the partition should
+##  Be resized immediately after purchasing the system,
+##  Before updates or additional application software and data
+##  Are saved across the disk. In practice, this may not be
+##  Feasible, and a single defragmentation operation may be
+##  Necessary. Windows will not normally allow this, as a
+##  “Safety precaution,” and we begin to see the limitations
+##  Imposed by what big tech believes is best for the public.
+##  I used the third party application, “Defraggler,” as a
+##  Convenient, free workaround.
+##  Next, I used EaseUS Partition Manager (free version) to
+##  Resize the Windows partition down to about 125 GB. The
+##  Native Windows settings app should also be able to resize
+##  This partition, and I was not particularly pleased with
+##  EaseUS’s paywall implementation. Regardless, I do not
+##  Recommend shrinking the Windows partition below 125 GB, as
+##  You will encounter issues with the baked in Windows backup
+##  System and you will not have room for much of a page file,
+##  Which will hinder the utility of your Windows installation
+##  And therefore the purpose of keeping it in a dualboot
+##  Configuration.
+##  
+##  Next, you’ll need to select your Linux “distribution,” or
+##  “Distro.” Consider this the “flavor” of Linux you wish to
+##  Use. There are many, because Linux is open source and many
+##  Branches have been developed for various use-cases. There
+##  One-size-fits-all, general use distros, there are licensed
+##  Distros for enterprise environments that cost money, and
+##  There are specialized, purpose built distros that do one
+##  Thing especially well and require advanced setup for
+##  Any use that falls outside of the scope of their use-case.
+##  Most of the community and internet will say that you need
+##  To experiment and find the right one for yourself. I started
+##  With “Mint,” a derivative of “Ubuntu,” which itself is a
+##  Derivative of “Debian.” You’ll hear terminology such as
+##  “Upstream” to describe these relationships. Mint, to my
+##  Understanding, is intended for general use similar to
+##  The way Windows is used. I did have some prior experience
+##  With my dad’s system running the “Red Hat” distro, a paid
+##  Flavor, and after experimenting with Ubuntu, Debian, and
+##  ArchLinux I have to say that they are all extremely similar
+##  At their cores, and primarily differ in what software they
+##  Come pre-packaged with and what additional software is
+##  Officially supported and available from the distro
+##  Repositories, or “repos,” via the included package manager
+##  Of whichever distro you choose. Most distros seem to use
+##  “APT”, while ArchLinux uses “Pacman.” Since Linux is open-
+##  Source, most of the software developed for it is also open-
+##  Source, and thanks to the internet there’s no need to go to
+##  A store and purchase software on a disk. The package manager
+##  Included with the distro you chose will come with an
+##  Official repo’s main (or stable) branch pre-enabled,
+##  Which means that if you know the name of a program in the
+##  Repo (think of a repo as a library), you can type a simple
+##  Installation command into your terminal and the package
+##  Manager will retrieve the program and install it on your
+##  System extremely quickly and efficiently, cataloging the
+##  Process, tracking errors, and managing the installation
+##  Of any dependant software automatically. For example:
+##  
+##  `apt install steam-installer`
+##  
+##  Typing the above command, sans the grave accent/backticks,
+##  Into a terminal and pressing enter will install an official
+##  Steam installation package released by Valve software.
+##  However, because Steam is proprietary (not open source),
+##  The command will only work if the disro’s “non-free” repo
+##  Has been added to the package managers “sources list” file.
+##  “Non-free” is a bit misleading, because it is indeed still
+##  Free. It’s simply not open source, meaning the code is not
+##  Available for public modification. The above command will
+##  Also not work for systems that don’t use APT for package
+##  Management, such as ArchLinux, which needs the following
+##  Command instead:
+##  
+##  `pacman -S steam-installer`
+##  
+##  To complete the installation of Steam, the user
+##  Will need to type `steam` into the terminal and press enter,
+##  After which Valve’s proprietary software will complete it’s
+##  Self installation and (assuming you’re using a desktop
+##  environment) you’ll find the classic Steam icon in your
+##  “Start menu,” which is referred to as a “Launcher” by
+##  Linux users. Valve has developed their own compatibility
+##  Software layer for games that don’t natively support Linux,
+##  Called “Proton,” which will install itself automatically
+##  When you download a game that it’s known to work for;
+##  Games that are unsupported may still work with it, and it
+##  Can be enabled for them using the game’s preferences menu.
+##  I’ve found that most games work fine, even better than
+##  Under Windows. There are still a few exceptions, but as of
+##  09/29/2024 Microsoft has announced the depreciation of
+##  Kernel-based anti-cheat software which will mean that very
+##  Soon, nearly all gaming software will function within some
+##  Sort of container such as Proton or Wine.
+##  
+##  Now that you understand some of the basics of software
+##  Distribution and use in a Linux environment, you should be
+##  Able to choose a distro; I do recommend Mint or perhaps
+##  Ubuntu for new users, but I personally prefer ArchLinux.
+##  Perhaps future versions of this guide will include
+##  Instructions to set up ArchLinux, and I may eventually
+##  Develop a script that will walk users through setting up
+##  A system to run ArchLinux with a tasteful desktop
+##  Environment, but as of version 0.1.0-0 we’ll assume Mint.
+##  
+##  Head over to https://linuxmint.com, and find the download
+##  Links for the installation ISO file. You’ll find
+##  Instructions to select the correct version (modern machines
+##  Will use the 64-bit version) and to verify the checksum
+##  Hash. It’s very easy to do, takes about 2 minutes if you
+##  Have never done it before, and if you skip it you risk
+##  Installing all sorts of viruses and malware at a very
+##  Foundational level on your system. DO NOT ASSUME YOUR
+##  INTERNET CONNECTION IS SECURE. HACKERS ARE SMART. IF YOU
+##  SKIP THIS STEP, YOU RISK EXPOSING YOUR PERSONAL DATA
+##  AND IT MAY BE IMPOSSIBLE TO RECOVER FROM THE FINANCIAL
+##  RUIN THAT COULD BEFALL YOU.
+##  
+##  !!!!!!!!!!!!!!!!!!!!!!!!IMPORTANT!!!!!!!!!!!!!!!!!!!!!!!  ##
+##  DO NOT SKIP THE CHECKSUM HASH CHECK STEP!
+##  !!!!!!!!!!!!!!!!!!!!!!!!IMPORTANT!!!!!!!!!!!!!!!!!!!!!!!  ##
+##  
+##  YOU HAVE BEEN WARNED. This is more important than the risk
+##  Of bricking your brand new computer. If you skip this step,
+##  You could install anti-virus software and firewall software
+##  And still never be aware of the malware present within your
+##  OS. To be clear; this is not a vulnerability within Linux.
+##  This is a vulnerability of computer systems as a whole, and
+##  If you struggle to understand the concept and choose to
+##  Ignore these warnings, you are contributing to the process
+##  Of natural selection and I hope you have no children. I’m
+##  Not even joking.
+##  
+##  !!!!!!!!!!!!!!!!!!!!!!!!IMPORTANT!!!!!!!!!!!!!!!!!!!!!!!  ##
+##  DO NOT SKIP THE CHECKSUM HASH CHECK STEP!
+##  !!!!!!!!!!!!!!!!!!!!!!!!IMPORTANT!!!!!!!!!!!!!!!!!!!!!!!  ##
+##  
+##  You have been warned twice. I wash my hands of thee.
+##
+##  Moving on. You’ve shrunk your Windows partition, downloaded
+##  Your shiny installation ISO file, checked the hash (or not,
+##  I don’t care anymore), and it’s sitting in your downloads
+##  Folder. This is where my guide diverts from the average.
+##  Most guides would now tell you that you need to go to the
+##  Store and buy a thumb drive, etch the ISO onto it, and set
+##  Up grub to boot the thumb drive. I say, fuck that noise.
+##  I didn’t have a thumb drive laying around and I didn’t have
+##  A car, an Amazon Prime membership, time to wait on shipping
+##  Or $5 for big tech’s unneccessary peripherals. I read the
+##  Grub 2 manual, and as it happens there’s no real reason
+##  To etch the ISO on a thumb drive. Would a thumb drive Linux
+##  Environment be a useful tool for an IT professional to keep
+##  In their laptop bag? Absolutely. Do you need one to set up
+##  A dualboot Windows/Mint desktop? Absolutely not. It’s extra
+##  Steps, and there’s that rule about human laziness.
+##  
+##  Go disable “Secure Boot.” There are instructions online,
+##  Or I will cover it in later versions.
+##  
+##  If you like, move the ISO to a permanent, easy to remember
+##  Directory, like C:\mintiso. If you like, change the
+##  Permissions to read only. Now go download grub2win.
+##  https://sourceforge.net/projects/grub2win/
+##  
+##  Grub2win is a grub 2 installation and setup tool for use
+##  In a Windows environment. Grub 2 is a technically beta,
+##  Though ubiquitous bootloader used by many, many, many
+##  Linux distros for decades to start the system and choose
+##  Which operating system to load from either a command line,
+##  Or, more commonly, a selection list of pre-configured boot
+##  Option scripts.
+##  
+##  Follow the grub2win instructions to configure grub 2 with a
+##  Windows boot option. This should be mostly automatic or
+##  Even included in the default settings. Completing the grub 2
+##  Installation at this point will modify the EFI partition
+##  That came with the Windows installation, adding grub 2 as
+##  The systems default bootloader and configuring it with a
+##  Standardized scripted menu option to chainload the Windows
+##  Bootloader and get you back here if you mess something up.
+##  If you set up the Linux ISO boot script and it fails, you
+##  Can reset the power and grub 2 will bring up your list of
+##  Boot options where you can get back to Windows, adjust the
+##  Script, and try again. Technically, you can just press
+##  “C” from the boot option menu to get a command line
+##  Interface where you can try manually booting the ISO
+##  With line-by-line commands, but if you’re not familiar
+##  With the process (and if you’re reading this, you probably
+##  Aren’t), you’ll feel better getting back to Windows to make
+##  A fresh attempt. You’ll need to reboot a few times during
+##  The process of disabling secure boot and installing grub 2.
+##  Make sure it’s all working correctly, and if you haven’t
+##  Bricked the device by now you should be in pretty safe
+##  Territory. If grub 2 attempts and fails to boot an image,
+##  It’ll dump to a rescue command line. From there you should
+##  Be able to simply type “reboot” to get back to the boot
+##  Option menu and select Windows, or even just hit the
+##  Power button without any negative consequences.
+##  
+##  Now that you’ve got grub 2 installed and you’ve tested it
+##  To get back into Windows (you tested it, right? Go do that),
+##  Launch grub2win from within Windows, and around the bottom
+##  Right corner you’ll find a button to adjust the boot option
+##  Menu items. Add an option. In the top left, don’t select
+##  Linux Mint from the drop down menu. Instead, scroll down
+##  And select the ISO image option. The interface will give you
+##  Options to select a specific ISO, so choose that file you
+##  Downloaded from linuxmint.com and auto-generate the boot
+##  Script. You’ll need to adjust the boot options to tell
+##  Grub 2 to target the linux kernel file and ramdisk image
+##  File contained within the ISO, which should be stored in the
+##  “/casper/boot/” directory within the ISO file, so the line
+##  That reads something like:
+##  `linux                /boot/linus-linux.img .. ..`
+##  Will need to be corrected to:
+##  `linux                /casper/linuz .. ..`
+##  As well as the initrd.img line below it:
+##  `initrd                /casper/initrd.lz`
+##  
+##  Ensure that grub is targeting (hd0,3) to find the files on
+##  The NVME SSD hard drive one, partition 3 (The first
+##  Partition is the EFI bootloader files, the second is a
+##  Critical Windows system partition, and the third is the
+##  Primary Windows OS partition containing “C:\”).
+##
+##  There are some default boot options below the kernel and 
+##  initrd lines that need to be set to... (WIP)
+##  
+##  Save the boot option configuration, and from the grub2win
+##  Main menu update the EFI partition/grub 2 installation.
+##  
+##  Congratulations. On the next reboot, when the grub 2 boot
+##  Option menu is displayed, you’ll see the Mint ISO boot
+##  Option. Mint isn’t installed yet, but you’re ready to boot
+##  Into the live ISO environment where you can click the
+##  “Install Linux Mint” icon on the desktop and follow the
+##  Prompts to create a new ext4 or BTRFS in the space you
+##  Freed up earlier and install Mint itself. For simplicity,
+##  I’d recommend just using ext4. Don’t worry about creating
+##  A swap partition when prompted. That’s only applicable for
+##  Systems with multiple Linux OS’s installed. Mint will
+##  Automatically create and use a swap file in it’s abscence.
+##  
+##  One note; Mint will install another copy of grub 2. If you
+##  Are frustrated by the redundancy, you can consolidate them
+##  And delete one or the other. If you leave both as they are,
+##  You’ll need to pull up the system BIOS options with “delete”
+##  During the boot process and switch between the two in order
+##  To access either the installed copy of Mint or Windows and
+##  The ISO copy of Mint. In the event that you break the
+##  Installed copy of Mint, which is common, this is how you’ll
+##  Be able to quickly reinstall it or browse and perform
+##  Surgery on the system files you traumatized.
+##
+##  Welcome to the Linux community. All hail the imminent AGI
+##  Overlord!
+##  
+################################################################
+##  
+##  5. System Preparation
+##  
+################################################################
+##  
+##  6. ISO Preparation
+##  
+################################################################
+##  
+##  7. Grub 2 Installation and Configuration
+##  
+################################################################
+##  
+##  8. Post ISO-Boot Generalized Next Steps
+##  
+################################################################
+##  
+##  9. Example 50_isoboot Grub 2 Config File
+##  
+################################################################
+##  
+##  10. FAQ
+##  
+################################################################
+##  
+##  11. Reference
+##  
+################################################################
+##  
+##  12. Credits and Thanks
+##  
+##  Thanks to my dad, as despicable as he is, for introducing
+##  Me to computers and providing me with such an extensive
+##  And thorough knowledge base.
+##  
+##  Thanks to my mom, as despicable as she is, for protecting
+##  Me from my dad to the degree that she did, and providing me
+##  With a primary education that included the tools I would
+##  Need to educate myself going forward. I hated the process,
+##  But I strongly believe that her efforts instilled in me
+##  Capabilities that have kept me alive and indeed empowered
+##  Me to use my mind to a greater degree than probably 99.9999%
+##  Of the human population today. Credit where credit is due.
+##  
+##  Thanks to Linus Torvalds for creating something better than
+##  What Bill Gates and Steve Jobs squeezed out of their pawns.
+##  
+##  Thanks to the Linux community as a whole, for rejecting
+##  Reality and substituting their own.
+##  
+##  Thanks to Adam Savage and Jamie Hyneman for inspiring me and
+##  Making science and engineering fun.
+##  
+##  Thank you to Mason with Jubilee Jobs of Lexington, Kentucky
+##  For finding a Cyber Security class for me when I was at my
+##  Lowest point, giving me something to focus on and work
+##  Towards while I endured the most painful experiences of my
+##  Incredibly painful life. Thank you to Rob Barbosa for his
+##  Role as well.
+##  
+##  Thank you to Kable Academy and their instructor, Ryan Twele,
+##  Who gracefully helped me through their Cyber Security course
+##  While I struggled with homelessness, societal rejection, and
+##  Late assignment submissions.
+##  
+##  My deepest, most heartfelt of all thanks to my dearest of
+##  All friends, indeed my only true friend, Leo. Your kindness,
+##  Compassion, and comraderie is unsurpassed. You are the most
+##  Intelligent person I’ve ever had the honor of meeting, and
+##  I will always champion you against all comers.
+##  
+##  I hereby dedicate this work to my daughter, Leona Rose. May
+##  She one day forgive me for my failures and mistakes.
+##  
+################################################################
+##  
+##  13. Contact
+##
+##  Please respect my time and privacy. Spam and malicious
+##  Communications will be filtered, so if you send me
+##  Something I don’t like your address will be blocked.
+##  If you persist with new addresses, your IP will be blocked.
+##  If you attempt a DDOS attack, I will go underground and
+##  Relaunch the project from a new device and a new network.
+##  Assistance in hosting this project to harden it against
+##  Such malicious activities is appreciated. This document is
+##  To be distributed freely, unedited, with credit, once hash
+##  Sum verification becomes implemented.
+##  
+##  Email: lexirath90@gmail.com
+##  
+##  Other contact info to be added in later versions.
+##  
+################################################################
+##                                                            ##
+##  END OF FILE                                               ##
+##                                                            ##
+################################################################
